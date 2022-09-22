@@ -239,13 +239,12 @@ func get_spotify_np() (is_playing bool, title string, artist string, album strin
 
 	var jsonObj interface{}
 	if err := json.Unmarshal(body, &jsonObj); err != nil {
-		fmt.Println("Failed to parse json @ retrieve Now Playing status: \n", string(body))
 		if err.Error() == "unexpected end of JSON input" {
-			fmt.Println("Warning: unexpected end of JSON input.")
 			is_playing = false
 			title, artist, album = "", "", ""
 			return is_playing, title, artist, album, url, progress
 		} else {
+			fmt.Println("Failed to parse json @ retrieve Now Playing status: \n", string(body))
 			log.Fatal(err)
 		}
 	}
