@@ -1,4 +1,4 @@
-# np2bui
+# np2bio
 Spotify の Now Playing を Twitter の bio に設定するボット
 
 ## Setup
