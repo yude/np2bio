@@ -13,6 +13,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/dghubble/go-twitter/twitter"
+	"github.com/dghubble/oauth1"
 	"github.com/joho/godotenv"
 )
 
@@ -45,6 +47,29 @@ func main() {
 		fmt.Println("https://accounts.spotify.com/authorize?" + values.Encode())
 	}
 
+	consumerKey := os.Getenv("TWITTER_CK")
+	consumerSecret := os.Getenv("TWITTER_CS")
+	accessToken := os.Getenv("TWITTER_AT")
+	accessSecret := os.Getenv("TWITTER_AS")
+
+	if consumerKey == "" || consumerSecret == "" || accessToken == "" || accessSecret == "" {
+		log.Fatal("Consumer key/secret and Access token/secret required")
+	}
+
+	config := oauth1.NewConfig(consumerKey, consumerSecret)
+	token := oauth1.NewToken(accessToken, accessSecret)
+	// OAuth1 http.Client will automatically authorize Requests
+	httpClient := config.Client(oauth1.NoContext, token)
+
+	// Twitter client
+	client := twitter.NewClient(httpClient)
+	verifyParams := &twitter.AccountVerifyParams{
+		SkipStatus:   twitter.Bool(true),
+		IncludeEmail: twitter.Bool(true),
+	}
+	user, _, _ := client.Accounts.VerifyCredentials(verifyParams)
+	fmt.Printf("✅ Logged in as %s (@%s) on Twitter.\n", user.Name, user.ScreenName)
+
 	last_title := ""
 
 	ticker := time.NewTicker(20 * time.Second)
@@ -58,6 +83,10 @@ func main() {
 					if progress > 5000 {
 						message := fmt.Sprintf("🎵 #NowPlaying #np: %s / %s (%s)\n%s", title, artist, album, url)
 						fmt.Println(message)
+						profileParams := &twitter.AccountUpdateProfileParams{
+							Description: message,
+						}
+						user, _, _ = client.Accounts.UpdateProfile(profileParams)
 
 						last_title = title
 					}
@@ -87,7 +116,7 @@ func spotify_callback(auth_code chan string) func(http.ResponseWriter, *http.Req
 		w.WriteHeader(200)
 		w.Header().Set("Content-Type", "text/html; charset=utf8")
 
-		w.Write([]byte("処理が完了しました。この画面を閉じることができます。\nnp2mast を再起動してください。"))
+		w.Write([]byte("処理が完了しました。この画面を閉じることができます。\nnp2bio を再起動してください。"))
 
 	}
 }
@@ -120,7 +149,7 @@ func save_refresh_token(auth_code string) {
 
 	var jsonObj interface{}
 	if err := json.Unmarshal(body, &jsonObj); err != nil {
-		fmt.Println(string(body))
+		fmt.Println("Failed to parse JSON @ save refresh token: ", string(body))
 		log.Fatal(err)
 	}
 
@@ -163,12 +192,12 @@ func get_spotify_access_token() string {
 
 	var jsonObj interface{}
 	if err := json.Unmarshal(body, &jsonObj); err != nil {
-		fmt.Println(string(body))
+		fmt.Println("Failed to parse json @ retrieve access token: \n", string(body))
 		log.Fatal(err)
 	}
 
 	if isNil(jsonObj.(map[string]interface{})["access_token"]) {
-		fmt.Println(body)
+		fmt.Println("Access token is null or not a valid object: \n", string(body))
 		os.Exit(1)
 	}
 
@@ -191,6 +220,7 @@ func get_spotify_np() (is_playing bool, title string, artist string, album strin
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", get_spotify_access_token()))
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
@@ -202,12 +232,12 @@ func get_spotify_np() (is_playing bool, title string, artist string, album strin
 
 	var jsonObj interface{}
 	if err := json.Unmarshal(body, &jsonObj); err != nil {
-		fmt.Println(string(body))
+		fmt.Println("Failed to parse json @ retrieve Now Playing status: \n", string(body))
 		log.Fatal(err)
 	}
 
 	if isNil(jsonObj.(map[string]interface{})["is_playing"]) {
-		fmt.Println(string(body))
+		fmt.Println("JSON object is null or not a valid object @ retrieve Now Playing Status: \n", string(body))
 		os.Exit(1)
 	}
 	is_playing = jsonObj.(map[string]interface{})["is_playing"].(bool)
