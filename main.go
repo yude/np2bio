@@ -72,7 +72,7 @@ func main() {
 
 	last_title := ""
 
-	ticker := time.NewTicker(20 * time.Second)
+	ticker := time.NewTicker(60 * time.Second)
 
 	for {
 		select {
