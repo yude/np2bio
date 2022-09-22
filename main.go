@@ -86,13 +86,19 @@ func main() {
 						profileParams := &twitter.AccountUpdateProfileParams{
 							Description: message,
 						}
-						user, _, _ = client.Accounts.UpdateProfile(profileParams)
+						client.Accounts.UpdateProfile(profileParams)
 
 						last_title = title
 					}
 				}
 			} else {
 				title, artist, album = "", "", ""
+				if last_title != "" {
+					profileParams := &twitter.AccountUpdateProfileParams{
+						Description: os.Getenv("BIO_DEFAULT"),
+					}
+					client.Accounts.UpdateProfile(profileParams)
+				}
 			}
 
 		}
