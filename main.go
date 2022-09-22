@@ -222,7 +222,7 @@ func isNil(i interface{}) bool {
 }
 
 func get_spotify_np() (is_playing bool, title string, artist string, album string, url string, progress float64) {
-	req, err := http.NewRequest(http.MethodGet, "https://api.spotify.com/v1/me/player/currently-playing", nil)
+	req, err := http.NewRequest(http.MethodGet, "https://api.spotify.com/v1/me/player/currently-playing?market=JP", nil)
 	if err != nil {
 		log.Fatal(err)
 	}
