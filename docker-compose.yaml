@@ -3,7 +3,7 @@ version: '3.9'
 services:
   app:
     build: .
-    # image: ghcr.io/yude/np2mast:master
+    # image: ghcr.io/yude/np2bio:master
     volumes:
       - type: bind
         source: "./.env"
