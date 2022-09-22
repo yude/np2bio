@@ -228,6 +228,7 @@ func get_spotify_np() (is_playing bool, title string, artist string, album strin
 	}
 
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", get_spotify_access_token()))
+	req.Header.Set("Accept-Language", "ja")
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		log.Fatal(err)
